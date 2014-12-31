@@ -80,16 +80,6 @@ function render_jade( path, options, fn ) {
   fis_jade_c.prototype.JS_HOOK = options._yog.JS_HOOK;
   fis_jade_c.prototype.BIGPIPE_HOOK = options._yog.BIGPIPE_HOOK;
 
-  var jses = [];
-  var csses = [];
-
-
-  var csslink = function( css ) {
-    return '<link rel="stylesheet" href="' + css + '" />';
-  }
-  var jslink  = function( js ) {
-    return '<script src="'+ js +'"></script>';
-  }
   return jade.renderFile( path, options);
 }
 
