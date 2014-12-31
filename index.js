@@ -63,7 +63,6 @@ fis_jade_p.visitTag = function( tag ) {
     && tag.attrs 
     && tag.attrs.length
     && tag.attrs.every(function( attr ) {
-      console.log( attr );
       return attr.name != 'no-move';
     })
   ){
@@ -89,17 +88,11 @@ fis_jade_p.visitTag = function( tag ) {
     jade_p_visitTag.apply(this, arguments);
   }
   if( code ){
-    console.log( code.val );
     this.visitCode( code );
   }
 }
 
-function render_jade( path, options, fn ) {
-  // support callback API
-  if ('function' == typeof options) {
-    fn = options, options = undefined;
-  }
-
+function render_jade( path, options ) {
   options = options || {};
 
   options.compiler = fis_jade_c;
