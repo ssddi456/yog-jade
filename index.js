@@ -3,8 +3,10 @@ var util = require('util');
 var Readable = require('stream').Readable;
 
 var jade = require('jade');
+var _ = require('./util');
 
 var jade_compiler = jade.Compiler;
+var nodes = jade.nodes;
 
 var fis_jade_c = function() {
   jade_compiler.apply(this,arguments);
@@ -16,6 +18,18 @@ var jade_p_visitTag = fis_jade_p.visitTag;
 fis_jade_p.visitTag = function( tag ) {
   var href;
   var code;
+  var holder;
+  if( tag.name == 'head' ){
+    holder = new nodes.Comment( this.CSS_HOOK, this.CSS_HOOK );
+  }
+  else if( tag.name == 'body' ){
+    holder = new nodes.Comment( this.JS_HOOK, this.CSS_HOOK );
+  }
+
+  if( holder ){
+    tag.block.push( holder );
+  }
+  
   if( tag.name == 'link' ){
     if( tag.attrs 
       && tag.attrs.length 
@@ -36,33 +50,47 @@ fis_jade_p.visitTag = function( tag ) {
       code.val = code.buffer = '_yog.addCss('+ href+')';
     }
   }
-  else if( tag.name == 'script' ){
-    if( tag.attrs 
-      && tag.attrs.length
-      && tag.attrs.some(function( attr ) {
-        if( attr.name == 'src' && attr.val){
-          href = attr.val;
-        }
-        return true;
-      })
+  else if( tag.name == 'style' ){
+    var scripts = (tag.block.nodes||[])
+                .map(function( node ) {
+                  return _.safe_escape(node.val);
+                })
+                .join('\\n');
+    code = {};
+    code.val = code.buffer = '_yog.addStyle("' + scripts + '")';
+  }
+  else if( tag.name == 'script' 
+    && tag.attrs 
+    && tag.attrs.length
+    && tag.attrs.every(function( attr ) {
+      console.log( attr );
+      return attr.name != 'no-move';
+    })
+  ){
+    if( tag.attrs.some(function( attr ) {
+          if( attr.name == 'src' && attr.val){
+            href = attr.val;
+          }
+          return true;
+        })
     ){
       code = {};
-      code.val = code.buffer = '_yog.addJs('+ href+')';    
+      code.val = code.buffer = '_yog.addJs('+ href+')';
+    } else {
+      var scripts = (tag.block.nodes||[])
+                      .map(function( node ) {
+                        return _.safe_escape(node.val);
+                      })
+                      .join('\\n');
+      code = {};
+      code.val = code.buffer = '_yog.addScript("'+ scripts +'")';
     }
   } else{
     jade_p_visitTag.apply(this, arguments);
   }
   if( code ){
+    console.log( code.val );
     this.visitCode( code );
-  }
-
-  if( tag.name == 'head' ){
-    this.buf.push( this.CSS_HOOK + this.buf.pop() );
-  }
-  else if( tag.name == 'body' ){
-    this.buf.push( this.JS_HOOK + this.buf.pop() );
-  } else {
-    return;
   }
 }
 
@@ -75,10 +103,13 @@ function render_jade( path, options, fn ) {
   options = options || {};
 
   options.compiler = fis_jade_c;
-
-  fis_jade_c.prototype.CSS_HOOK = options._yog.CSS_HOOK;
-  fis_jade_c.prototype.JS_HOOK = options._yog.JS_HOOK;
-  fis_jade_c.prototype.BIGPIPE_HOOK = options._yog.BIGPIPE_HOOK;
+  [
+    'CSS_HOOK',
+    'JS_HOOK',
+    'BIGPIPE_HOOK'
+  ].forEach(function( name ) {
+    fis_jade_c.prototype[name] = options._yog[name].match(/^<\!\-\-(.*)\-\-\>$/)[1];
+  });
 
   return jade.renderFile( path, options);
 }
