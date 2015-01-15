@@ -69,8 +69,8 @@ fis_jade_p.visitTag = function( tag ) {
     if( tag.attrs.some(function( attr ) {
           if( attr.name == 'src' && attr.val){
             href = attr.val;
+            return true;
           }
-          return true;
         })
     ){
       code = {};
