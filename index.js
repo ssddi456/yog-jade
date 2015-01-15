@@ -108,37 +108,32 @@ function render_jade( path, options ) {
 }
 
 var jade_stream = function() {
-  Readable.apply(this,arguments);
+  Readable.call(this);
 }
 
 util.inherits(jade_stream,Readable);
 var jsp = jade_stream.prototype;
 
 jsp._read = function(n) {
-  if( !this.buzy && this.view ){
-    if (this.buzy){
-      return;
-    }
-    this.buzy = true;
-    try{
-      this.push(render_jade(this.view, this.locals));
-      this.push(null);
-    }catch(e){
-      this.emit('error',e);
-    }
+  try{
+    this.push(render_jade(this.view, this.options));
+    this.push(null);
+  }catch(e){
+    this.emit('error',e);
   }
-};
-
-jsp.makeStream = function(view, locals) {
-  Readable.call(this, null);
-  this.view = view;
-  this.locals = locals;
-  return this;
 };
 
 jsp.destroy = function() {
   this.removeAllListeners();
 };
 
-
-module.exports = jade_stream;
+module.exports = function() {
+  return {
+    makeStream : function(view, options) {
+      var ret = new jade_stream();
+      ret.view = view;
+      ret.options = options;
+      return ret;
+    }
+  }
+};
