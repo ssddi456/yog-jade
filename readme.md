@@ -3,6 +3,11 @@
 此方案使得jade支持yog方案提供的资源管理系统，
 
 使用：
+
+在 yog project 中执行:
+
+```npm install --save yog-jade```
+
 修改```yog/conf/plugins/views.js```,加入
 
 ```js
