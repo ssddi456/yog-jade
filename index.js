@@ -34,16 +34,13 @@ fis_jade_p.visitTag = function( tag ) {
     if( tag.attrs 
       && tag.attrs.length 
       && tag.attrs.some(function( attr ) {
-        return attr.name == 'rel' && attr.val == '"stylesheet"';
-      })
-      && tag.attrs.some(function( attr ) {
-        return attr.name == 'type' && attr.val== '"text/css"';
+        return attr.name == 'rel' && attr.val.match( /(['"]?)stylesheet\1/);
       })
       && tag.attrs.some(function( attr ) {
         if( attr.name == 'href' && attr.val){
           href = attr.val;
+          return true;
         }
-        return true;
       })
     ){
       code = {};
