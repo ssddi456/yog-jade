@@ -101,7 +101,10 @@ function render_jade( path, options ) {
     'JS_HOOK',
     'BIGPIPE_HOOK'
   ].forEach(function( name ) {
-    fis_jade_c.prototype[name] = options._yog[name].match(/^<\!\-\-(.*)\-\-\>$/)[1];
+    try{
+      // if no bigpipe conf, skip it
+      fis_jade_c.prototype[name] = options._yog[name].match(/^<\!\-\-(.*)\-\-\>$/)[1];
+    } catch(e){}
   });
 
   return jade.renderFile( path, options);
