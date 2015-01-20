@@ -58,10 +58,11 @@ fis_jade_p.visitTag = function( tag ) {
   }
   else if( tag.name == 'script' 
     && tag.attrs 
-    && tag.attrs.length
-    && tag.attrs.every(function( attr ) {
-      return attr.name != 'no-move';
-    })
+    && (tag.attrs.length
+        ? tag.attrs.every(function( attr ) {
+          return attr.name != 'no-move';
+        })
+        : true)
   ){
     if( tag.attrs.some(function( attr ) {
           if( attr.name == 'src' && attr.val){
