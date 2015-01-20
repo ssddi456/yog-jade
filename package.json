@@ -1,6 +1,6 @@
 {
   "name": "yog-jade",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "custom jade engine for yog",
   "main": "index.js",
   "scripts": {
