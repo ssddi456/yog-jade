@@ -4,12 +4,13 @@ var Readable = require('stream').Readable;
 
 var jade = require('jade');
 var _ = require('./util');
-
 var jade_compiler = jade.Compiler;
 var nodes = jade.nodes;
 
 var fis_jade_c = function() {
   jade_compiler.apply(this,arguments);
+
+  this.code_block_uuid = 0;
 };
 
 var fis_jade_p = fis_jade_c.prototype = Object.create(jade_compiler.prototype);
@@ -23,7 +24,7 @@ fis_jade_p.visitTag = function( tag ) {
     holder = new nodes.Comment( this.CSS_HOOK, this.CSS_HOOK );
   }
   else if( tag.name == 'body' ){
-    holder = new nodes.Comment( this.JS_HOOK, this.CSS_HOOK );
+    holder = new nodes.Comment( this.JS_HOOK, this.JS_HOOK );
   }
 
   if( holder ){
@@ -48,13 +49,21 @@ fis_jade_p.visitTag = function( tag ) {
     }
   }
   else if( tag.name == 'style' ){
-    var scripts = (tag.block.nodes||[])
-                .map(function( node ) {
-                  return _.safe_escape(node.val);
-                })
-                .join('\\n');
-    code = {};
-    code.val = code.buffer = '_yog.addStyle("' + scripts + '")';
+
+    
+    var uuid = this.code_block_uuid++;
+    var code_block_name = 'code_block_' + uuid;
+    var script_code_name = 'script_code_' + uuid;
+    
+    this.buf.push(';' + code_block_name + ' = [];');
+    this.buf.push('(function(buf){');
+
+    this.visit(tag.block);
+
+    this.buf.push('}('+code_block_name+'))');
+    this.buf.push(';' + script_code_name + ' = ' + code_block_name +'.join(\'\');');
+    this.buf.push('_yog.addStyle('+ script_code_name +')');
+
   }
   else if( tag.name == 'script' 
     && tag.attrs 
@@ -74,13 +83,28 @@ fis_jade_p.visitTag = function( tag ) {
       code = {};
       code.val = code.buffer = '_yog.addJs('+ href+')';
     } else {
-      var scripts = (tag.block.nodes||[])
-                      .map(function( node ) {
-                        return _.safe_escape(node.val);
-                      })
-                      .join('\\n');
-      code = {};
-      code.val = code.buffer = '_yog.addScript("'+ scripts +'")';
+      var uuid = this.code_block_uuid++;
+      var code_block_name = 'code_block_' + uuid;
+      var script_code_name = 'script_code_' + uuid;
+
+      //
+      // will produce code like
+      // 
+      // var script_code_block_#{code_uuid} = [];
+      // (function(buf){
+      //    origin scripts here
+      // }(script_code_block_#{code_uuid}));
+      // _yog.addScript("'+ jade.escape(script_code_block_#{code_uuid}.join('\n')) +'")
+      // 
+
+      this.buf.push(';' + code_block_name + ' = [];');
+      this.buf.push('(function(buf){');
+
+      this.visit(tag.block);
+
+      this.buf.push('}('+code_block_name+'))');
+      this.buf.push(';' + script_code_name + ' = ' + code_block_name +'.join(\'\');');
+      this.buf.push('_yog.addScript('+ script_code_name +')');
     }
   } else{
     jade_p_visitTag.apply(this, arguments);
