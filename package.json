@@ -1,7 +1,7 @@
 {
   "name": "yog-jade",
-  "version": "0.0.8",
-  "description": "custom jade engine for yog",
+  "version": "0.0.9",
+  "description": "custom jade engine for yog2",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

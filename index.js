@@ -20,6 +20,24 @@ fis_jade_p.visitTag = function( tag ) {
   var href;
   var code;
   var holder;
+
+  if( tag.name == 'html' ){
+    var framework;
+    if( tag.attrs 
+      && tag.attrs.length 
+      &&  ( framework = tag.attrs.filter(function( attr) {
+                return attr.name =='framework';
+            })[0] )
+    ) {
+      code = {};
+      code.val = code.buffer = '_yog.setFramework('+ framework.val+')';
+
+      tag.attrs = tag.attrs.filter(function(attr) {
+          return attr.name != 'framework';
+      });
+    }
+  }
+
   if( tag.name == 'head' ){
     holder = new nodes.Comment( this.CSS_HOOK, this.CSS_HOOK );
   }
